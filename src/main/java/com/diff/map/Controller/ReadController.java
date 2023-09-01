@@ -238,6 +238,6 @@ public class ReadController {
 			}
 		}
 		
-		return "전체조회 : " + Integer.toString(ListCount) + "<br>" + "업데이트된 위도·경도 : " + Integer.toString(SuccessCount);
+		return "<업데이트 내역><br>전체조회 : " + Integer.toString(ListCount) + "<br>" + "업데이트된 위도·경도 : " + Integer.toString(SuccessCount);
 	}
 }
