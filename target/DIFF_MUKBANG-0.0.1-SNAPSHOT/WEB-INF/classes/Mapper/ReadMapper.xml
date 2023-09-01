@@ -1,0 +1,106 @@
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.diff.map.Mapper.ReadMapper">
+	
+	<select id="UserID" resultType="String" parameterType="HashMap">
+		select coalesce(max(_user_id), '') UserID
+		  from user_info
+		 where 1=1
+		 <if test="android_id != ''">
+		   and _user_android_id = #{android_id}
+		 </if>
+		 <if test="ios_id != ''">
+		   and _user_ios_id = #{ios_id}
+		 </if>
+	</select>
+	
+	<select id="UserChannelYN" resultType="String" parameterType="HashMap">
+		select case when count(*) > 0 then 'Y' else 'N' end UserChannelYN
+		  from user_channel_info
+		 where _user_id = #{user_id}
+	</select>
+	
+	<select id="UserChannelList" resultType="HashMap" parameterType="HashMap">
+		select x._user_id, x._user_android_id, y._user_channel_id, z._channel_name _user_channel_name, y._user_channel_color
+		  from user_info x, user_channel_info y, channel_info z
+		 where x._user_id = y._user_id
+		   and y._user_channel_id = z._channel_id
+		   and x._user_id = #{user_id}
+		 order by y._user_channel_reg_datetime, cast(z._channel_youtube_subscribe_count as integer) desc
+	</select>
+	
+	<select id="UserRestaurantList" resultType="HashMap" parameterType="HashMap">
+		select x._user_id, x._user_android_id, y._user_channel_id, z._channel_name _user_channel_name, y._user_channel_color
+			 , a._restaurant_id _user_restaurant_id, a._restaurant_name _user_restaurant_name, a._restaurant_address _user_restaurant_address
+			 , a._restaurant_latitude _user_restaurant_latitude, a._restaurant_longitude _user_restaurant_longitude
+			 , a._restaurant_youtube_id _user_restaurant_youtube_id, a._restaurant_navermap_id _user_restaurant_navermap_id
+			 , a._restaurant_kakaomap_id _user_restaurant_kakaomap_id, a._restaurant_tmap_id _user_restaurant_tmap_id
+			 , a._restaurant_review_star_point _user_restaurant_review_star_point
+			 , a._restaurant_review_visitor_count _user_restaurant_review_visitor_count
+			 , a._restaurant_review_blog_count _user_restaurant_review_blog_count
+		  from user_info x, user_channel_info y, channel_info z, restaurant_info a
+		 where x._user_id = y._user_id
+		   and y._user_channel_id = z._channel_id
+		   and z._channel_id = a._channel_id
+		   and x._user_id = #{user_id}
+		   <if test="channel_id != ''">
+		   and z._channel_id in (${channel_id})
+		   </if>
+		 order by y._user_channel_reg_datetime, cast(z._channel_youtube_subscribe_count as integer) desc, cast(replace(_restaurant_id , 'R', '') as integer)
+	</select>
+	
+	<select id="UserSettingChannelList" resultType="HashMap" parameterType="HashMap">
+		select x._channel_id, x._channel_name, coalesce(y._user_channel_color, x._channel_marker_color) _channel_marker_color
+			 , _channel_button_width, _channel_youtube_id, _channel_youtube_subscribe_count, _channel_youtube_video_count
+		  from channel_info x
+		  left outer join (
+			  	select x._user_id, x._user_android_id, y._user_channel_id, z._channel_name _user_channel_name, y._user_channel_color
+				  from user_info x, user_channel_info y, channel_info z
+				 where x._user_id = y._user_id
+				   and y._user_channel_id = z._channel_id
+				   and x._user_id = #{user_id}
+				 order by y._user_channel_reg_datetime, cast(z._channel_youtube_subscribe_count as integer) desc
+		  ) y on x._channel_id = y._user_channel_id
+		 where 1=1
+	</select>
+	
+	<select id="ChannelList" resultType="HashMap" parameterType="HashMap">
+		select _channel_id, _channel_name, _channel_marker_color, _channel_button_width, _channel_youtube_id, _channel_youtube_subscribe_count, _channel_youtube_video_count
+		  from channel_info
+		 <if test="channel_id != ''">
+		 where _channel_id in (${channel_id})
+		 </if>
+		 order by cast(replace(_channel_id , 'C', '') as integer)
+	</select>
+	
+	<select id="RestaurantList" resultType="HashMap" parameterType="HashMap">
+		select _channel_id, _restaurant_id, _restaurant_name, _restaurant_address, _restaurant_latitude, _restaurant_longitude
+			 , _restaurant_youtube_id, _restaurant_navermap_id, _restaurant_kakaomap_id, _restaurant_tmap_id
+			 , _restaurant_review_star_point, _restaurant_review_visitor_count, _restaurant_review_blog_count
+		  from restaurant_info
+		 <if test="restaurant_id != ''">
+		 where _restaurant_id in (${restaurant_id})
+		 </if>
+		 order by cast(replace(_restaurant_id , 'R', '') as integer)
+	</select>
+	
+	<select id="MarkerList" resultType="HashMap" parameterType="HashMap">
+		select x._channel_id, x._channel_name, x._channel_marker_color, x._channel_button_width
+			 , y._restaurant_id, y._restaurant_name, y._restaurant_address, y._restaurant_latitude, y._restaurant_longitude
+		  from channel_info x, restaurant_info y
+		 where x._channel_id = y._channel_id
+		   and x._channel_id in (${channel_id})
+		 order by cast(replace(y._restaurant_id , 'R', '') as integer)
+	</select>
+	
+	<select id="GeocodingNonList" resultType="HashMap">
+		select x._restaurant_id, x._restaurant_address
+		  from restaurant_info x
+		 where coalesce(x._restaurant_address, '') != ''
+		   and (coalesce(x._restaurant_latitude, '') = '' or coalesce(x._restaurant_longitude, '') = '')
+		 order by cast(replace(x._restaurant_id , 'R', '') as integer)
+	</select>
+
+</mapper>
