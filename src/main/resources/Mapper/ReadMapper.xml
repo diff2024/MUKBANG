@@ -28,6 +28,7 @@
 		 where x._user_id = y._user_id
 		   and y._user_channel_id = z._channel_id
 		   and x._user_id = #{user_id}
+		   and z._channel_use_yn = 'Y'
 		 order by y._user_channel_reg_datetime, cast(z._channel_youtube_subscribe_count as integer) desc
 	</select>
 	
@@ -44,6 +45,10 @@
 		 where x._user_id = y._user_id
 		   and y._user_channel_id = z._channel_id
 		   and z._channel_id = a._channel_id
+		   and z._channel_use_yn = 'Y'
+		   and a._restaurant_use_yn = 'Y'
+		   and a._restaurant_latitude != ''
+		   and a._restaurant_longitude != ''
 		   and x._user_id = #{user_id}
 		   <if test="channel_id != ''">
 		   and z._channel_id in (${channel_id})
@@ -60,10 +65,11 @@
 				  from user_info x, user_channel_info y, channel_info z
 				 where x._user_id = y._user_id
 				   and y._user_channel_id = z._channel_id
+				   and z._channel_use_yn = 'Y'
 				   and x._user_id = #{user_id}
 				 order by y._user_channel_reg_datetime, cast(z._channel_youtube_subscribe_count as integer) desc
 		  ) y on x._channel_id = y._user_channel_id
-		 where 1=1
+		 where x._channel_use_yn = 'Y'
 	</select>
 	
 	<select id="ChannelList" resultType="HashMap" parameterType="HashMap">
@@ -71,6 +77,7 @@
 		  from channel_info
 		 <if test="channel_id != ''">
 		 where _channel_id in (${channel_id})
+		   and _channel_use_yn = 'Y'
 		 </if>
 		 order by cast(replace(_channel_id , 'C', '') as integer)
 	</select>
@@ -82,6 +89,10 @@
 		  from restaurant_info
 		 <if test="restaurant_id != ''">
 		 where _restaurant_id in (${restaurant_id})
+		   and _restaurant_use_yn = 'Y'
+		 </if>
+		 <if test="restaurant_id == ''">
+		 where _restaurant_use_yn = 'Y'
 		 </if>
 		 order by cast(replace(_restaurant_id , 'R', '') as integer)
 	</select>
@@ -91,6 +102,8 @@
 			 , y._restaurant_id, y._restaurant_name, y._restaurant_address, y._restaurant_latitude, y._restaurant_longitude
 		  from channel_info x, restaurant_info y
 		 where x._channel_id = y._channel_id
+		   and x._channel_use_yn = 'Y'
+		   and y._restaurant_use_yn = 'Y'
 		   and x._channel_id in (${channel_id})
 		 order by cast(replace(y._restaurant_id , 'R', '') as integer)
 	</select>
